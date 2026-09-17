@@ -23,7 +23,7 @@ npm run dev
 
 Open the local URL provided by Vite in your browser.
 
-Architecture
+Architecture (Please view the diagram in code mode)
                   Public Job Sources
                          |
                          v
