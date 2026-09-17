@@ -48,10 +48,10 @@ function Dashboard() {
         const jobsSnapshot = await getDocs(jobsCollection);
 
         const jobsData = jobsSnapshot.docs.map((document) => ({
-          id: document.id,
+          docid: document.id,
           ...document.data(),
         }));
-
+        console.log(jobsData)
         setJobs(jobsData);
       } catch (error) {
         console.error("Failed to fetch jobs:", error);

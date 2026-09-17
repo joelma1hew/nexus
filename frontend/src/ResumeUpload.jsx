@@ -16,6 +16,7 @@ function ResumeUpload({ jobs, savedJobs , setSavedJobs}) {
   const [audioUrl, setAudioUrl] = useState("");
   const [pdfFile, setPdfFile] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [generating, setGenerating] = useState(false)
   const userInputRef = useRef()
   const [cosl, setCosl] = useState([]);
   const [showSaved, setShowSaved] = useState(false)
@@ -191,12 +192,17 @@ function ResumeUpload({ jobs, savedJobs , setSavedJobs}) {
 }
 
 async function handleGenerateAudio() {
-      let sortedJobs =(savedJobs.sort((a,b) => a.salary - b.salary)).slice(0,3)
-  const url = await generateAudio(
-    `Here are the top 3 job matches you have got. First one is the role of a ${sortedJobs[0].title} in ${sortedJobs[0].company} with a salary of ${sortedJobs[0].salary}. Second one is the role of a ${sortedJobs[1].title} in ${sortedJobs[1].company} with a salary of ${sortedJobs[1].salary}.  Third one is the role of a ${sortedJobs[2].title} in ${sortedJobs[2].company} with a salary of ${sortedJobs[2].salary}`
-  );
+  setGenerating(true)
+  let sortedJobs =(savedJobs.sort((a,b) => b.match - a.match)).slice(0,3)
+
+  const interaction = await ai.interactions.create({
+    model: "gemini-3.6-flash",
+    input: `I need you to make me a minute long script about my top 3 job opportunities. Im going to write the list as Job Number , title, company , salary and location. Job 1 : ${sortedJobs[0].title}, ${sortedJobs[0].company},${sortedJobs[0].salary}and ${sortedJobs[0].location}. Job 1 : ${sortedJobs[1].title}, ${sortedJobs[1].company},${sortedJobs[1].salary}and ${sortedJobs[1].location}. Job 3 : ${sortedJobs[2].title}, ${sortedJobs[2].company},${sortedJobs[2].salary}and ${sortedJobs[2].location}.Important instruction: return just the script and nothing else. I am playing this on my frontend code so dont use any special characters or digits in the script it should all be words.`, 
+  });  
+  const url = await generateAudio(interaction.output_text);
 
   setAudioUrl(url);
+  setGenerating(false)
 }
 
   return (
@@ -221,7 +227,7 @@ async function handleGenerateAudio() {
 {
   savedJobs.length > 2 ? (
             <button onClick={handleGenerateAudio}>
-  Generate My Briefing
+              {generating? "Calculating your best choices.." : "Listen to your top matches"}
       </button>
  
 ) : <></> 
