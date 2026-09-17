@@ -11,8 +11,6 @@ function Dashboard() {
   const [jobs, setJobs] = useState([]);
   const [savedJobs, setSavedJobs] = useState([])
   const [loadingJobs, setLoadingJobs] = useState(true);
-  const [embeddings, setEmbeddings] = useState([]);
-  const [loadingEmbeddings, setLoadingEmbeddings] = useState(false);
 
   const user = auth.currentUser;
 
@@ -46,7 +44,7 @@ function Dashboard() {
   useEffect(() => {
     async function fetchJobs() {
       try {
-        const jobsCollection = collection(db, "jobs");
+        const jobsCollection = collection(db, "test");
         const jobsSnapshot = await getDocs(jobsCollection);
 
         const jobsData = jobsSnapshot.docs.map((document) => ({
@@ -63,48 +61,9 @@ function Dashboard() {
     }
 
     fetchJobs();
+
   }, []);
 
-
-  // Generate embeddings whenever jobs are loaded
-  useEffect(() => {
-    async function generateJobEmbeddings() {
-      if (jobs.length === 0) {
-        setEmbeddings([]);
-        return;
-      }
-
-      try {
-        setLoadingEmbeddings(true);
-
-        const ai = new GoogleGenAI({
-          apiKey: GEMINI_API_KEY,
-        });
-
-        const embeddingResults = await Promise.all(
-          jobs.map(async (job) => {
-            const response = await ai.models.embedContent({
-              model: "gemini-embedding-2",
-              contents: job.title,
-            });
-
-            return {
-              jobId: job.id,
-              values: response.embeddings[0].values,
-            };
-          })
-        );
-
-        setEmbeddings(embeddingResults);
-      } catch (error) {
-        console.error("Failed to generate job embeddings:", error);
-      } finally {
-        setLoadingEmbeddings(false);
-      }
-    }
-
-    generateJobEmbeddings();
-  }, [jobs]);
 
 
   async function handleLogout() {
@@ -115,9 +74,6 @@ function Dashboard() {
     }
   }
 
-  function getJobEmbedding(jobId) {
-    return embeddings.find((embedding) => embedding.jobId === jobId);
-  }
 
 
 
@@ -127,21 +83,15 @@ function Dashboard() {
 
       <button onClick={handleLogout}>Logout</button>
         <Agent savedJobs={savedJobs}/>
-      <ResumeUpload getJobEmbedding={getJobEmbedding}embeddings={embeddings} jobs={jobs} savedJobs={savedJobs}/>
+      <ResumeUpload jobs={jobs} savedJobs={savedJobs} setSavedJobs={setSavedJobs}/>
 
 
 
       {loadingJobs && <p>Loading jobs...</p>}
-      {loadingEmbeddings && <p>Loading embeddings...</p>}
 
       {!loadingJobs && jobs.length === 0 && (
         <p>No jobs found.</p>
     )} 
-     {!loadingEmbeddings && embeddings.length === 0 && (
-        <p>Embeddings not created. Please try again later.</p>
-     )
-
-     }
     </div>
   );
 }

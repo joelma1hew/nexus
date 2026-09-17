@@ -7,26 +7,21 @@ import ShortList from "./ShortList";
 import Job from "./Job"
 import {DEEPGRAM_API_KEY} from "./firebase"
 
-import { ElevenLabsClient, play } from "@elevenlabs/elevenlabs-js";
-
 
 
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
-function ResumeUpload({getJobEmbedding, embeddings, jobs, savedJobs}) {
+function ResumeUpload({ jobs, savedJobs , setSavedJobs}) {
   const [audioUrl, setAudioUrl] = useState("");
   const [pdfFile, setPdfFile] = useState(null);
-  const [userInput, setUserInput] = useState("");
   const [loading, setLoading] = useState(false);
   const userInputRef = useRef()
   const [cosl, setCosl] = useState([]);
-  const [expOutput, setExpOutput] = useState([])
   const [showSaved, setShowSaved] = useState(false)
   const [showAll, setShowAll] = useState(false)  
   const ai = new GoogleGenAI({apiKey: GEMINI_API_KEY}); 
   const [hide , setHide] = useState(false)
-  const [playing, setPlaying] = useState(false)
 
   function cosineSimilarity(a, b) {
     let dot = 0;
@@ -56,12 +51,10 @@ function ResumeUpload({getJobEmbedding, embeddings, jobs, savedJobs}) {
     }
 
     setPdfFile(file);
-    setUserInput("");
   }
 
   async function search(text) {
-    
-    setExpOutput([])
+    setHide(false)
     try {
         const response = await ai.models.embedContent({
             model: "gemini-embedding-2",
@@ -75,9 +68,9 @@ function ResumeUpload({getJobEmbedding, embeddings, jobs, savedJobs}) {
 
      let newCosl = [];
 
-    for(let i = 0; i < embeddings.length; i++) {
+    for(let i = 0; i < jobs.length; i++) {
         let score = cosineSimilarity(
-            embeddings[i].values,
+            jobs[i].embedding,
             response.embeddings[0].values
         );
 
@@ -87,6 +80,7 @@ function ResumeUpload({getJobEmbedding, embeddings, jobs, savedJobs}) {
 }
 
     setCosl(newCosl);
+    
 
     const indices = newCosl
     .map((num, index) => ({ num, index }))
@@ -98,15 +92,6 @@ function ResumeUpload({getJobEmbedding, embeddings, jobs, savedJobs}) {
         .map(index => jobs[index].title);
 
     console.log(jobTitles);
-  async function expGenerator() {
-      const interaction = await ai.interactions.create({
-        model: "gemini-3.6-flash",
-        input: `For each shortlisted job, write one concise sentence explaining why it matches the user's input. Start each with the exact job title. Return ONLY an array of strings, nothing else.Format:["Backend Engineer: Matches your interest in backend development.", "Frontend Developer: Matches your interest in React."] here is the user input${userInput} and here are the jobs ${jobTitles} . If the userinput is a resume then i want you to make the explaination more personalised like how the job contains most of the skills the user has put in the resume.`
-    });
-    const array = JSON.parse(interaction.output_text)
-    setExpOutput(array)
-  }
-  await expGenerator()
 
     }
     catch(error) {
@@ -147,7 +132,6 @@ function ResumeUpload({getJobEmbedding, embeddings, jobs, savedJobs}) {
         extractedText += pageText + "\n";
       }
 
-      setUserInput(extractedText);
       search(extractedText)
     } catch (error) {
       console.error("PDF extraction error:", error);
@@ -159,7 +143,6 @@ function ResumeUpload({getJobEmbedding, embeddings, jobs, savedJobs}) {
 
   async function semanticSearch() {
     const input = userInputRef.current.value
-    setUserInput(input)
     if(!input) {
         alert("please enter some input")
         return 
@@ -235,14 +218,20 @@ async function handleGenerateAudio() {
       <button onClick = {() => handleHideShortList()}>
         {hide ? "Show ShortList" : "Hide ShortList"}
 </button>
-        <button onClick={handleGenerateAudio}>
+{
+  savedJobs.length > 2 ? (
+            <button onClick={handleGenerateAudio}>
   Generate My Briefing
-
-
-{audioUrl && (
-  <audio controls src={audioUrl} />
-)}
       </button>
+ 
+) : <></> 
+
+}
+
+      {audioUrl && (
+  <audio controls src={audioUrl} />
+  )}
+
 
             <input
         type="file"
@@ -260,16 +249,13 @@ async function handleGenerateAudio() {
       {
         loading ? "Loading optimal shortlist" : !hide && (
         <div> 
-            <ShortList jobs ={jobs} cosl={cosl} expOutput={expOutput} getJobEmbedding={getJobEmbedding} />
+            <ShortList jobs ={jobs} cosl={cosl} setSavedJobs={setSavedJobs}  />
         </div>
         )
       }
 
       {showSaved && (
         <div>
-          {
-            savedJobs.length > 2 ? <button onClick={() => playAudio()}>Play Overview Audio</button> : <></>
-          }
             
             {
               savedJobs.map(job => {
@@ -291,8 +277,6 @@ async function handleGenerateAudio() {
         (<h2>All Jobs</h2>) &&
       showAll &&
         jobs.map((job) => {
-          const jobEmbedding = getJobEmbedding(job.id);
-
           return (
             <div>
                 <Job key={job.id} job={job}/>

@@ -250,6 +250,28 @@ with open("jobs.csv", "w", newline="") as file:
 jobs = json.loads(final_json.output_text)
 
 
+# Generate an embedding for every job title
+embeddings = []
+
+for job in jobs:
+    title = job.get("title")
+
+    if title:
+        response = client.models.embed_content(
+            model="gemini-embedding-2",
+            contents=title
+        )
+
+        embeddings.append(response.embeddings[0].values)
+
+    else:
+        embeddings.append(None)
+
+
+# Add the embedding to the corresponding job
+for index, job in enumerate(jobs):
+    job["embedding"] = embeddings[index]
+
 def create_job_id(job):
     unique_text = "|".join([
         str(job.get("source_url") or ""),
@@ -264,7 +286,7 @@ def create_job_id(job):
 
 
 # Upload jobs to the shared collection
-jobs_collection = db.collection("jobs")
+jobs_collection = db.collection("test")
 
 for job in jobs:
     job_id = create_job_id(job)

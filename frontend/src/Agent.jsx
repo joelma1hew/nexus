@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useRef} from "react";
 import { GoogleGenAI } from "@google/genai";
 
 import { GEMINI_API_KEY } from "./firebase";
 import Job from "./Job"
+
 
 import {
   getDescendingSalaries,
@@ -15,12 +16,15 @@ const ai = new GoogleGenAI({
 });
 
 function Agent({savedJobs}) {
-
-  const [input, setInput] = useState("");
+  const agentInputRef = useRef()
+  const [loading, setLoading] = useState(false)
   const [response, setResponse] = useState("");
   const [resultJobs, setResultJobs] = useState([])
 async function askAgent() {
   try {
+    setLoading(true)
+  const input = agentInputRef.current.value
+  agentInputRef.current.value = null
   const interaction = await ai.interactions.create({
     model: "gemini-3.6-flash",
 
@@ -100,6 +104,8 @@ console.log("Final answer:", finalInteraction.output_text);
 setResponse(finalInteraction.output_text);}
 catch(e) {
   alert("Rate limit reached. Please try again later.")
+}finally {
+  setLoading(false)
 }
 }
 
@@ -109,12 +115,7 @@ return (
       <h2>Nexus Agent</h2>
 
       <input
-        value={input}
-        onChange={(e) =>{
-            let inp = e.target.value
-            setInput(inp)
-            e.target.value = ""
-        } }
+        ref= {agentInputRef}
         placeholder="Ask about your saved jobs..."
       />
 
@@ -128,8 +129,10 @@ return (
 
       }}>Clear</button>
 
-        <p>{response}</p>
-        {
+
+        <p>{loading ? "Loading your query" : response}</p>
+
+        { !loading &&
           resultJobs.map(resultJob => {
             let job = savedJobs[resultJob.index]
             return (

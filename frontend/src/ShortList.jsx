@@ -2,7 +2,7 @@ import { auth, db } from "./firebase";
 import { collection, addDoc } from "firebase/firestore";
 import Job from './Job'
 
-export default function ShortList({disabledSave, jobs, cosl, expOutput , getJobEmbedding}) {
+export default function ShortList({jobs, cosl, setSavedJobs}) {
 
   const user = auth.currentUser;
 
@@ -23,7 +23,11 @@ export default function ShortList({disabledSave, jobs, cosl, expOutput , getJobE
     );
 
     console.log("Job saved!");
+    console.log(job)
+    setSavedJobs(prev => [...prev, job])
+
   }
+
 
 
   const indices = cosl
@@ -49,10 +53,6 @@ export default function ShortList({disabledSave, jobs, cosl, expOutput , getJobE
             <Job job={job}/>
             <p>
               Match Score: {(cosl[jobIndex] * 100).toFixed(2)}%
-            </p>
-
-            <p>
-              {expOutput[i]}
             </p>
 
             <button onClick={() => saveJob(job)} >

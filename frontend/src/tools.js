@@ -41,38 +41,11 @@ async function getSalaries() {
 
   let salaries = jobs.map(job => job.salary);
 
+  const prompt = `Convert salaries to yearly USD. Range = average. "per day" = yearly; "per annum" = yearly; no period = yearly. Negotiable, competitive, missing, or unusable = 0. Preserve indexes. Return ONLY JSON: [{"index":0,"salary":0}]. Salaries: ${JSON.stringify(salaries)}`;
+
   const salary_array = await ai.interactions.create({
     model: "gemini-3.6-flash",
-    input: `
-Here I have given you a list of salaries of some jobs.
-
-Some jobs have a salary range and some jobs say negotiable.
-
-For each salary:
-- If there is a salary range, calculate the average of the range.
-- Convert the result into yearly USD salary.
-- If the salary is negotiable, competitive, missing, or otherwise does not contain a usable number, return 0.
-- If "per day" is mentioned, convert it into yearly USD salary.
-- If "per annum" is mentioned, treat it as yearly salary.
-- If neither "per day" nor "per annum" is mentioned, assume it is yearly salary.
-- Return the index of each salary.
-
-Example input:
-["Salary negotiable", "Competitive salary", "£300 - £600 per day", "€65,000 - €66,000 per annum"]
-
-Example output:
-[
-  {"index": 0, "salary": 0},
-  {"index": 1, "salary": 0},
-  {"index": 2, "salary": 0},
-  {"index": 3, "salary": 0}
-]
-
-Return ONLY the JSON array and nothing else.
-
-Salaries:
-${JSON.stringify(salaries)}
-`
+    input: prompt
   });
   console.log(salary_array.output_text)
   let result = JSON.parse(salary_array.output_text);
@@ -108,33 +81,11 @@ async function getLivingExpenses() {
 
   let locations = jobs.map(job => job.location);
 
+  const prompt = `Estimate each location's average yearly living expense for one person in USD. Missing location = 0. Preserve indexes. Return ONLY JSON: [{"index":0,"expenses":30000}]. Locations: ${JSON.stringify(locations)}`;
+
   const location_array = await ai.interactions.create({
     model: "gemini-3.6-flash",
-    input: `
-Here I have given you a list of job locations.
-
-For each location, estimate the average yearly living expense
-for one person in that location, in USD.
-
-Return the result using the same index as the input.
-
-If the location is missing, return 0.
-
-Example input:
-["London", "USA", "Germany"]
-
-Example output:
-[
-  {"index": 0, "expenses": 30000},
-  {"index": 1, "expenses": 40000},
-  {"index": 2, "expenses": 25000}
-]
-
-Return ONLY the JSON array and nothing else.
-
-Locations:
-${JSON.stringify(locations)}
-`
+    input: prompt
   });
 
   let result = JSON.parse(location_array.output_text);
