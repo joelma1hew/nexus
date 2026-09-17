@@ -1,4 +1,7 @@
 # Nexus
+
+Here is the link of the webiste : https://nexus-guild.netlify.app/
+
 Setup
 git clone https://github.com/joelma1hew/nexus
 cd nexus
