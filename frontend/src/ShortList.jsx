@@ -1,0 +1,67 @@
+import { auth, db } from "./firebase";
+import { collection, addDoc } from "firebase/firestore";
+import Job from './Job'
+
+export default function ShortList({disabledSave, jobs, cosl, expOutput , getJobEmbedding}) {
+
+  const user = auth.currentUser;
+
+
+  async function saveJob(job) {
+    let i = jobs.indexOf(job)
+    let matchScore = cosl[i]
+    job.match = matchScore*100
+
+    if (!user) {
+      console.log("User is not logged in");
+      return;
+    }
+
+    await addDoc(
+      collection(db, "users", user.uid, "saved"),
+      job
+    );
+
+    console.log("Job saved!");
+  }
+
+
+  const indices = cosl
+    .map((num, index) => ({ num, index }))
+    .sort((a, b) => Math.abs(b.num) - Math.abs(a.num))
+    .map((item) => item.index);
+
+
+  return (
+    <>
+
+      {!(indices.length == 0) && (<h3>Your Shortlist</h3>)
+      }
+      {indices.slice(0, 5).map((jobIndex) => {
+
+        const job = jobs[jobIndex];
+
+        let i = indices.indexOf(jobIndex);
+
+        return (
+          <div key={job.id}>
+
+            <Job job={job}/>
+            <p>
+              Match Score: {(cosl[jobIndex] * 100).toFixed(2)}%
+            </p>
+
+            <p>
+              {expOutput[i]}
+            </p>
+
+            <button onClick={() => saveJob(job)} >
+              Save Job
+            </button>
+
+          </div>
+        );
+      })}
+    </>
+  );
+}
