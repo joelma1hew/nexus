@@ -255,7 +255,7 @@ async function handleGenerateAudio() {
       {
         loading ? "Loading optimal shortlist" : !hide && (
         <div> 
-            <ShortList jobs ={jobs} cosl={cosl} setSavedJobs={setSavedJobs}  />
+            <ShortList jobs ={jobs} cosl={cosl} savedJobs={savedJobs} setSavedJobs={setSavedJobs}  />
         </div>
         )
       }
