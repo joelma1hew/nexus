@@ -83,17 +83,6 @@ function ResumeUpload({ jobs, savedJobs , setSavedJobs}) {
     setCosl(newCosl);
     
 
-    const indices = newCosl
-    .map((num, index) => ({ num, index }))
-    .sort((a, b) => b.num - a.num)
-    .map((item) => item.index);
-
-    let jobTitles = indices
-        .slice(0, 5)
-        .map(index => jobs[index].title);
-
-    console.log(jobTitles);
-
     }
     catch(error) {
         console.log(error)

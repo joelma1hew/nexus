@@ -8,7 +8,6 @@ export default function ShortList({jobs, cosl, savedJobs, setSavedJobs}) {
 
   const user = auth.currentUser;
 
-
   async function saveJob(job) {
     setSaving(true)
     let i = jobs.indexOf(job)
@@ -30,8 +29,6 @@ export default function ShortList({jobs, cosl, savedJobs, setSavedJobs}) {
     setSavedJobs(prev => [...prev, job])
     setSaving(false)
   }
-
-
 
   const indices = cosl
     .map((num, index) => ({ num, index }))
