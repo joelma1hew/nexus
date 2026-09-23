@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { signOut } from "firebase/auth";
 import { collection, getDocs } from "firebase/firestore";
-import { GoogleGenAI } from "@google/genai";
 import Agent from "./Agent";
 
-import { auth, db, GEMINI_API_KEY } from "./firebase";
+import { auth, db } from "./firebase";
 import ResumeUpload from "./ResumeUpload";
 
 function Dashboard() {
